@@ -1,7 +1,13 @@
 import Calculator from "@/components/Calculator";
+import Navigation from "@/components/Navigation";
 
 const Index = () => {
-  return <Calculator />;
+  return (
+    <>
+      <Navigation />
+      <Calculator />
+    </>
+  );
 };
 
 export default Index;
