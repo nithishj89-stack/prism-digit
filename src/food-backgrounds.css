@@ -1,0 +1,54 @@
+/* Food Backgrounds CSS */
+
+/* Base background with food pattern */
+.food-background {
+  background: 
+    linear-gradient(rgba(30, 30, 30, 0.85), rgba(30, 30, 30, 0.95)),
+    url('/biryani-background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Alternative food backgrounds for variety */
+.food-background-biryani {
+  background: 
+    linear-gradient(rgba(30, 30, 30, 0.85), rgba(30, 30, 30, 0.95)),
+    url('/biryani-background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.food-background-burger {
+  background: 
+    linear-gradient(rgba(30, 30, 30, 0.85), rgba(30, 30, 30, 0.95)),
+    url('/burger-background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.food-background-pizza {
+  background: 
+    linear-gradient(rgba(30, 30, 30, 0.85), rgba(30, 30, 30, 0.95)),
+    url('/pizza-background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* For pages that need a lighter overlay */
+.food-background-light {
+  background: 
+    linear-gradient(rgba(30, 30, 30, 0.7), rgba(30, 30, 30, 0.8)),
+    url('/biryani-background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}

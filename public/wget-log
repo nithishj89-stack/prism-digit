@@ -1,0 +1,11 @@
+--2025-11-09 14:51:01--  https://images.unsplash.com/photo-1563379926898-05f4575a45d8?ixlib=rb-4.0.3
+Resolving images.unsplash.com (images.unsplash.com)... 146.75.46.208, 2a04:4e42:7b::720
+Connecting to images.unsplash.com (images.unsplash.com)|146.75.46.208|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 991640 (968K) [image/jpeg]
+Saving to: ‘biryani-background.jpg’
+
+      biryan   0%       0  --.-KB/s               biryani-back 100% 968.40K  6.23MB/s    in 0.2s    
+
+2025-11-09 14:51:02 (6.23 MB/s) - ‘biryani-background.jpg’ saved [991640/991640]
+

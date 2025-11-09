@@ -4,7 +4,7 @@ import { ArrowRight, UtensilsCrossed, Clock, Shield } from "lucide-react";
 
 const Home = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen food-background">
       <Navigation />
       
       {/* Hero Section */}
@@ -19,7 +19,7 @@ const Home = () => {
           <div className="animate-fade-in">
             <div className="inline-flex items-center gap-2 bg-glass-bg/50 backdrop-blur-sm border border-glass-border rounded-full px-6 py-2 mb-6">
               <UtensilsCrossed className="w-5 h-5 text-neon-cyan" />
-              <span className="text-sm font-medium">College Food Billing System</span>
+              <span className="text-sm font-medium">Madras College Canteen</span>
             </div>
             
             <h1 className="text-6xl md:text-7xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent animate-glow-pulse">
@@ -80,7 +80,7 @@ const Home = () => {
       {/* Footer */}
       <footer className="bg-glass-bg/50 backdrop-blur-sm border-t border-glass-border py-6 mt-16">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          © 2025 College Food Billing System | Designed with ❤️ in Lovable AI
+          © 2025 Madras College Canteen | Designed with ❤️ in Lovable AI
         </div>
       </footer>
     </div>

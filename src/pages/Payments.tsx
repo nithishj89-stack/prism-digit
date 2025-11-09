@@ -1,31 +1,115 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
-import { CreditCard, Smartphone, Banknote, Check } from "lucide-react";
+import { CreditCard, Smartphone, Banknote, Check, QrCode, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
-type PaymentMethod = "card" | "upi" | "cash";
+type PaymentMethod = "card" | "upi" | "cash" | "qr";
 
 const Payments = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("upi");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [orderId, setOrderId] = useState("");
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
+  const [isGeneratingQr, setIsGeneratingQr] = useState(false);
+  const [customQrCode, setCustomQrCode] = useState(""); // For your uploaded QR code
+
+  // Generate a random order ID
+  useEffect(() => {
+    const newOrderId = `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
+    setOrderId(newOrderId);
+  }, []);
+
+  // Generate QR code when QR payment method is selected
+  useEffect(() => {
+    if (selectedMethod === "qr" && !qrCodeDataUrl && !isGeneratingQr && !customQrCode) {
+      generateQrCode();
+    }
+  }, [selectedMethod]);
 
   const cart = JSON.parse(localStorage.getItem("cart") || "[]");
   const total = cart.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
 
-  const handlePayment = () => {
-    setShowSuccess(true);
-    
-    setTimeout(() => {
-      localStorage.removeItem("cart");
-      toast({
-        title: "Payment Successful! 🎉",
-        description: "Your order has been confirmed.",
+  const generateQrCode = async () => {
+    setIsGeneratingQr(true);
+    try {
+      const response = await fetch('http://localhost:5000/api/payments/generate-upi-qr', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId,
+          amount: total
+        })
       });
-      navigate("/");
-    }, 2000);
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setQrCodeDataUrl(data.qrCodeDataUrl);
+      } else {
+        toast({
+          title: "Error",
+          description: data.message || "Failed to generate QR code",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate QR code",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingQr(false);
+    }
+  };
+
+  // Function to handle custom QR code upload
+  const handleCustomQrUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setCustomQrCode(event.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePayment = () => {
+    // For QR code payments, simulate real-time payment confirmation
+    if (selectedMethod === "qr") {
+      // Simulate payment processing
+      setTimeout(() => {
+        setShowSuccess(true);
+        
+        setTimeout(() => {
+          localStorage.removeItem("cart");
+          toast({
+            title: "Payment Successful! 🎉",
+            description: "Your order has been confirmed.",
+          });
+          navigate("/");
+        }, 2000);
+      }, 3000); // Simulate 3 seconds for payment confirmation
+    } else {
+      setShowSuccess(true);
+      
+      setTimeout(() => {
+        localStorage.removeItem("cart");
+        toast({
+          title: "Payment Successful! 🎉",
+          description: "Your order has been confirmed.",
+        });
+        navigate("/");
+      }, 2000);
+    }
   };
 
   const paymentMethods = [
@@ -44,6 +128,13 @@ const Payments = () => {
       gradient: "from-neon-cyan to-neon-blue"
     },
     {
+      id: "qr" as PaymentMethod,
+      name: "QR Code Payment",
+      icon: <QrCode className="w-6 h-6" />,
+      description: "Scan QR to pay instantly",
+      gradient: "from-neon-green to-neon-teal"
+    },
+    {
       id: "cash" as PaymentMethod,
       name: "Cash Payment",
       icon: <Banknote className="w-6 h-6" />,
@@ -53,7 +144,7 @@ const Payments = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen food-background">
       <Navigation />
       
       <div className="pt-24 pb-16">
@@ -153,6 +244,69 @@ const Payments = () => {
                     className="w-full bg-muted/50 border border-glass-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
+                <div className="text-center py-4">
+                  <p className="text-muted-foreground mb-2">Or scan the QR code below</p>
+                  <button 
+                    onClick={() => setSelectedMethod("qr")}
+                    className="inline-flex items-center gap-2 text-neon-cyan hover:underline"
+                  >
+                    <QrCode className="w-4 h-4" />
+                    Use QR Code Payment
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {selectedMethod === "qr" && (
+              <div className="text-center py-6">
+                <div className="mb-6">
+                  <div className="inline-block p-4 bg-white rounded-xl">
+                    {isGeneratingQr ? (
+                      <div className="w-48 h-48 flex items-center justify-center">
+                        <Loader2 className="w-8 h-8 animate-spin text-neon-cyan" />
+                      </div>
+                    ) : customQrCode ? (
+                      <img 
+                        src={customQrCode} 
+                        alt="Custom UPI Payment QR Code" 
+                        className="w-48 h-48"
+                      />
+                    ) : qrCodeDataUrl ? (
+                      <img 
+                        src={qrCodeDataUrl} 
+                        alt="UPI Payment QR Code" 
+                        className="w-48 h-48"
+                      />
+                    ) : (
+                      <div className="w-48 h-48 bg-gradient-primary rounded-lg flex items-center justify-center">
+                        <div className="text-center text-white">
+                          <QrCode className="w-16 h-16 mx-auto mb-2" />
+                          <p className="font-bold">UPI QR</p>
+                          <p className="text-sm">₹{total}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <p className="text-muted-foreground mb-4">
+                  Scan this QR code with any UPI app to pay ₹{total}
+                </p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Order ID: {orderId}
+                </p>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-2">Upload Your QR Code</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleCustomQrUpload}
+                    className="w-full bg-muted/50 border border-glass-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <div className="w-2 h-2 rounded-full bg-neon-cyan animate-pulse"></div>
+                  <span>Waiting for payment confirmation...</span>
+                </div>
               </div>
             )}
 
@@ -169,9 +323,15 @@ const Payments = () => {
           {/* Pay Button */}
           <button
             onClick={handlePayment}
-            className="w-full bg-gradient-primary text-primary-foreground px-8 py-4 rounded-full text-lg font-semibold shadow-glow hover:shadow-glow-cyan transition-all duration-300 hover:scale-105"
+            disabled={selectedMethod === "qr"}
+            className={`w-full px-8 py-4 rounded-full text-lg font-semibold transition-all duration-300 hover:scale-105 ${
+              selectedMethod === "qr" 
+                ? "bg-muted text-muted-foreground cursor-not-allowed" 
+                : "bg-gradient-primary text-primary-foreground shadow-glow hover:shadow-glow-cyan"
+            }`}
           >
-            {selectedMethod === "cash" ? "Confirm Order" : "Pay Now"}
+            {selectedMethod === "cash" ? "Confirm Order" : 
+             selectedMethod === "qr" ? "Waiting for Payment" : "Pay Now"}
           </button>
         </div>
       </div>
@@ -193,7 +353,7 @@ const Payments = () => {
 
       <footer className="bg-glass-bg/50 backdrop-blur-sm border-t border-glass-border py-6">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          © 2025 College Food Billing System | Designed with ❤️ in Lovable AI
+          © 2025 Madras College Canteen | Designed with ❤️ in Lovable AI
         </div>
       </footer>
     </div>

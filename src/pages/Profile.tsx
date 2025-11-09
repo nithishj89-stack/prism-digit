@@ -35,7 +35,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen food-background">
       <Navigation />
       
       <div className="pt-24 pb-16">
@@ -159,7 +159,7 @@ const Profile = () => {
 
       <footer className="bg-glass-bg/50 backdrop-blur-sm border-t border-glass-border py-6">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          © 2025 College Food Billing System | Designed with ❤️ in Lovable AI
+          © 2025 Madras College Canteen | Designed with ❤️ in Lovable AI
         </div>
       </footer>
     </div>
