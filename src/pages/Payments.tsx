@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
+import ReceiptModal from "@/components/ReceiptModal";
 import { CreditCard, Smartphone, Banknote, Check, QrCode, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +16,8 @@ const Payments = () => {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
   const [isGeneratingQr, setIsGeneratingQr] = useState(false);
   const [customQrCode, setCustomQrCode] = useState(""); // For your uploaded QR code
+  const [receiptData, setReceiptData] = useState<any>(null); // For receipt data
+  const [showReceipt, setShowReceipt] = useState(false); // For showing receipt modal
 
   // Generate a random order ID
   useEffect(() => {
@@ -87,7 +90,19 @@ const Payments = () => {
     if (selectedMethod === "qr") {
       // Simulate payment processing
       setTimeout(() => {
-        setShowSuccess(true);
+        // Create receipt data
+        const receipt = {
+          orderId: orderId || `ORD-${Math.floor(100000 + Math.random() * 900000)}`,
+          paymentId: `PAY-${Math.floor(100000 + Math.random() * 900000)}`,
+          amount: total,
+          paymentMethod: "UPI QR Code",
+          items: cart,
+          timestamp: new Date().toISOString(),
+          upiId: process.env.REACT_APP_UPI_ID || "canteen@upi"
+        };
+        
+        setReceiptData(receipt);
+        setShowReceipt(true);
         
         setTimeout(() => {
           localStorage.removeItem("cart");
@@ -96,10 +111,21 @@ const Payments = () => {
             description: "Your order has been confirmed.",
           });
           navigate("/");
-        }, 2000);
+        }, 3000);
       }, 3000); // Simulate 3 seconds for payment confirmation
     } else {
-      setShowSuccess(true);
+      // Create receipt data
+      const receipt = {
+        orderId: orderId || `ORD-${Math.floor(100000 + Math.random() * 900000)}`,
+        paymentId: `PAY-${Math.floor(100000 + Math.random() * 900000)}`,
+        amount: total,
+        paymentMethod: selectedMethod === "card" ? "Credit/Debit Card" : selectedMethod === "upi" ? "UPI" : "Cash",
+        items: cart,
+        timestamp: new Date().toISOString()
+      };
+      
+      setReceiptData(receipt);
+      setShowReceipt(true);
       
       setTimeout(() => {
         localStorage.removeItem("cart");
@@ -108,7 +134,7 @@ const Payments = () => {
           description: "Your order has been confirmed.",
         });
         navigate("/");
-      }, 2000);
+      }, 3000);
     }
   };
 
@@ -349,6 +375,15 @@ const Payments = () => {
             </p>
           </div>
         </div>
+      )}
+                
+      {/* Receipt Modal */}
+      {receiptData && (
+        <ReceiptModal 
+          isOpen={showReceipt} 
+          onClose={() => setShowReceipt(false)} 
+          receiptData={receiptData} 
+        />
       )}
 
       <footer className="bg-glass-bg/50 backdrop-blur-sm border-t border-glass-border py-6">

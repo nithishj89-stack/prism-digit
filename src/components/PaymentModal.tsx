@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
+import ReceiptModal from "./ReceiptModal";
 import { X, CreditCard, QrCode, CheckCircle } from "lucide-react";
 
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   totalAmount: number;
+  cartItems: any[];
   onPaymentSuccess: () => void;
 }
 
-const PaymentModal = ({ isOpen, onClose, totalAmount, onPaymentSuccess }: PaymentModalProps) => {
+const PaymentModal = ({ isOpen, onClose, totalAmount, cartItems, onPaymentSuccess }: PaymentModalProps) => {
   const [paymentMethod, setPaymentMethod] = useState<"card" | "upi">("card");
   const [cardNumber, setCardNumber] = useState("");
   const [expiry, setExpiry] = useState("");
@@ -17,11 +19,17 @@ const PaymentModal = ({ isOpen, onClose, totalAmount, onPaymentSuccess }: Paymen
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [orderId, setOrderId] = useState("");
+  const [paymentId, setPaymentId] = useState("");
+  const [receiptData, setReceiptData] = useState<any>(null);
+  const [showReceipt, setShowReceipt] = useState(false);
 
-  // Generate a random order ID
+  // Generate a random order ID and payment ID
   useEffect(() => {
     if (isOpen) {
-      setOrderId(`ORD-${Math.floor(100000 + Math.random() * 900000)}`);
+      const newOrderId = `ORD-${Date.now().toString().slice(-6)}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const newPaymentId = `PAY-${Date.now().toString().slice(-5)}-${Math.floor(100 + Math.random() * 900)}`;
+      setOrderId(newOrderId);
+      setPaymentId(newPaymentId);
     }
   }, [isOpen]);
 
@@ -32,9 +40,24 @@ const PaymentModal = ({ isOpen, onClose, totalAmount, onPaymentSuccess }: Paymen
     // Simulate payment processing
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // For demo purposes, we'll assume all payments are successful
+    // Create receipt data
+    const receipt = {
+      orderId,
+      paymentId,
+      amount: totalAmount,
+      paymentMethod: paymentMethod === "card" ? "Credit/Debit Card" : "UPI",
+      items: cartItems,
+      timestamp: new Date().toISOString()
+    };
+    
+    setReceiptData(receipt);
     setIsSuccess(true);
     setIsProcessing(false);
+    
+    // Show receipt modal
+    setTimeout(() => {
+      setShowReceipt(true);
+    }, 1000);
     
     // Call the success callback after a short delay
     setTimeout(() => {
@@ -203,6 +226,15 @@ const PaymentModal = ({ isOpen, onClose, totalAmount, onPaymentSuccess }: Paymen
               </button>
             </div>
           </>
+        )}
+        
+        {/* Receipt Modal */}
+        {receiptData && (
+          <ReceiptModal 
+            isOpen={showReceipt} 
+            onClose={() => setShowReceipt(false)} 
+            receiptData={receiptData} 
+          />
         )}
       </div>
     </div>

@@ -51,6 +51,13 @@ const Order = () => {
 
   const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
+  // Generate a unique order ID
+  const generateOrderId = () => {
+    const timestamp = Date.now().toString().slice(-6);
+    const random = Math.floor(1000 + Math.random() * 9000);
+    return `ORD-${timestamp}-${random}`;
+  };
+
   const comboSuggestions = [
     { name: "Cold Coffee + Brownie", discount: 10, emoji: "☕🍰" },
     { name: "Burger + Fries Combo", discount: 15, emoji: "🍔🍟" },

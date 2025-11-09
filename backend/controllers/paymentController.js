@@ -1,8 +1,25 @@
 // Payment controller for handling payment-related operations
 import QRCode from 'qrcode';
 
+// Store payments in memory (in production, this would be in a database)
+let payments = [];
+
 // Store UPI ID in memory (in production, this would be in a database)
 let upiId = process.env.UPI_ID || 'canteen@upi';
+
+// Generate a unique order ID
+const generateOrderId = () => {
+  const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
+  const random = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
+  return `ORD-${timestamp}-${random}`;
+};
+
+// Generate a unique payment ID
+const generatePaymentId = () => {
+  const timestamp = Date.now().toString().slice(-5); // Last 5 digits of timestamp
+  const random = Math.floor(100 + Math.random() * 900); // 3-digit random number
+  return `PAY-${timestamp}-${random}`;
+};
 
 // Update UPI ID
 export const updateUpiId = async (req, res) => {
@@ -30,28 +47,28 @@ export const getUpiId = async (req, res) => {
   }
 };
 
-// In-memory storage for payment records (in production, this would be a database)
-let payments = [];
-
 // Process a payment
 export const processPayment = async (req, res) => {
   try {
-    const { orderId, amount, paymentMethod, paymentDetails } = req.body;
+    const { orderId, amount, paymentMethod, cartItems } = req.body;
     
     // Validate required fields
-    if (!orderId || !amount || !paymentMethod) {
+    if (!amount || !paymentMethod) {
       return res.status(400).json({ 
-        message: 'Missing required fields: orderId, amount, and paymentMethod are required' 
+        message: 'Missing required fields: amount and paymentMethod are required' 
       });
     }
     
+    // Generate order ID if not provided
+    const finalOrderId = orderId || generateOrderId();
+    
     // Create payment record
     const payment = {
-      id: `PAY-${Date.now()}`,
-      orderId,
+      id: generatePaymentId(),
+      orderId: finalOrderId,
       amount,
       paymentMethod,
-      paymentDetails: paymentDetails || {},
+      cartItems: cartItems || [],
       status: 'completed', // In a real system, this would be 'pending' initially
       timestamp: new Date().toISOString()
     };
@@ -65,7 +82,17 @@ export const processPayment = async (req, res) => {
     res.status(200).json({
       message: 'Payment processed successfully',
       paymentId: payment.id,
-      status: 'completed'
+      orderId: payment.orderId,
+      status: 'completed',
+      receipt: {
+        orderId: payment.orderId,
+        paymentId: payment.id,
+        amount: payment.amount,
+        paymentMethod: payment.paymentMethod,
+        items: payment.cartItems,
+        timestamp: payment.timestamp,
+        upiId: upiId
+      }
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -88,7 +115,16 @@ export const getPaymentStatus = async (req, res) => {
       orderId: payment.orderId,
       status: payment.status,
       amount: payment.amount,
-      paymentMethod: payment.paymentMethod
+      paymentMethod: payment.paymentMethod,
+      receipt: {
+        orderId: payment.orderId,
+        paymentId: payment.id,
+        amount: payment.amount,
+        paymentMethod: payment.paymentMethod,
+        items: payment.cartItems,
+        timestamp: payment.timestamp,
+        upiId: upiId
+      }
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -109,21 +145,24 @@ export const generateUpiQrCode = async (req, res) => {
   try {
     const { orderId, amount } = req.body;
     
-    if (!orderId || !amount) {
+    if (!amount) {
       return res.status(400).json({ 
-        message: 'Missing required fields: orderId and amount are required' 
+        message: 'Missing required fields: amount is required' 
       });
     }
     
+    // Generate order ID if not provided
+    const finalOrderId = orderId || generateOrderId();
+    
     // Use the UPI ID from memory or environment variables
-    const upiUrl = `upi://pay?pa=${upiId}&pn=Madras%20College%20Canteen&am=${amount}&cu=INR&tn=${orderId}`;
+    const upiUrl = `upi://pay?pa=${upiId}&pn=Madras%20College%20Canteen&am=${amount}&cu=INR&tn=${finalOrderId}`;
     
     // In a real implementation, you would provide your own QR code
     // For now, we'll generate a QR code but you can replace this with your own
     const qrCodeDataUrl = await QRCode.toDataURL(upiUrl);
     
     res.json({
-      orderId,
+      orderId: finalOrderId,
       amount,
       upiId,
       upiUrl,
