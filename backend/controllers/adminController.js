@@ -1,10 +1,10 @@
-import AdminService from '../services/adminService.js';
+import { authenticateAdmin, getAdminByUsername, createAdmin } from '../services/firebaseAdminService.js';
 
 // Admin login
 export const adminLogin = async (req, res) => {
   try {
     const { password } = req.body;
-    const result = await AdminService.adminLogin(password);
+    const result = await authenticateAdmin(password);
     res.json(result);
   } catch (error) {
     res.status(401).json({ message: error.message || 'Invalid password' });
@@ -17,7 +17,10 @@ export const toggleFoodAvailability = async (req, res) => {
     const { id } = req.params;
     const { available } = req.body;
     
-    const food = await AdminService.toggleFoodAvailability(id, available);
+    // Import the toggle function from food service
+    const { toggleFoodAvailability } = await import('../services/foodService.js');
+    
+    const food = await toggleFoodAvailability(id);
     
     if (!food) {
       return res.status(404).json({ message: 'Food not found' });
@@ -32,7 +35,10 @@ export const toggleFoodAvailability = async (req, res) => {
 // Get all foods with availability status
 export const getFoodsWithAvailability = async (req, res) => {
   try {
-    const foods = await AdminService.getFoodsWithAvailability();
+    // Import the get function from food service
+    const { getAllFoods } = await import('../services/foodService.js');
+    
+    const foods = await getAllFoods();
     res.json(foods);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -41,5 +47,7 @@ export const getFoodsWithAvailability = async (req, res) => {
 
 // Initialize default admin user
 export const initializeAdmin = async () => {
-  await AdminService.initializeAdmin();
+  // For now, we're not initializing an admin user in Supabase
+  // The authentication is handled through the ADMIN_PASSWORD environment variable
+  console.log('Admin initialization skipped for Supabase implementation');
 };

@@ -14,6 +14,9 @@ import Admin from "./pages/Admin";
 import Offers from "./pages/Offers";
 import Gallery from "./pages/Gallery";
 import Contact from "./pages/Contact";
+import StudentLogin from "./pages/StudentLogin";
+import FacultyLogin from "./pages/FacultyLogin";
+import Registration from "./pages/Registration";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +29,9 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/student-login" element={<StudentLogin />} />
+          <Route path="/faculty-login" element={<FacultyLogin />} />
+          <Route path="/register" element={<Registration />} />
           <Route path="/menu" element={<Menu />} />
           <Route path="/order" element={<Order />} />
           <Route path="/payments" element={<Payments />} />

@@ -11,6 +11,10 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [upiId, setUpiId] = useState("");
   const [newUpiId, setNewUpiId] = useState("");
+  const [fileAmount, setFileAmount] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [isGeneratingFile, setIsGeneratingFile] = useState(false);
+  const [generatedFileUrl, setGeneratedFileUrl] = useState("");
 
   // Check if already authenticated
   useEffect(() => {
@@ -165,6 +169,46 @@ const Admin = () => {
       }
     } catch (error) {
       console.error('Error updating UPI ID:', error);
+    }
+  };
+
+  const generateAmountFile = async () => {
+    try {
+      // Validate amount
+      const amount = parseFloat(fileAmount);
+      if (isNaN(amount) || amount <= 0) {
+        // Show error message
+        return;
+      }
+      
+      // Validate file name
+      if (!fileName.trim()) {
+        // Show error message
+        return;
+      }
+      
+      setIsGeneratingFile(true);
+      
+      // Create a text file with the amount information
+      const fileContent = `Amount: ₹${amount}
+Generated on: ${new Date().toLocaleString()}
+For: ${fileName}`;
+      const blob = new Blob([fileContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      
+      setGeneratedFileUrl(url);
+      
+      // Trigger download
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_amount.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error generating amount file:', error);
+    } finally {
+      setIsGeneratingFile(false);
     }
   };
 
@@ -394,6 +438,57 @@ const Admin = () => {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Generate Amount File */}
+          <div className="bg-glass-bg/80 backdrop-blur-xl border border-glass-border rounded-2xl p-8 mt-8">
+            <h2 className="text-2xl font-semibold mb-6">Generate Amount File</h2>
+            <p className="text-muted-foreground mb-6">Create a text file with a specified amount for record keeping</p>
+            
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium mb-2">Amount</label>
+                <input
+                  type="number"
+                  value={fileAmount}
+                  onChange={(e) => setFileAmount(e.target.value)}
+                  placeholder="Enter amount"
+                  className="w-full bg-glass-bg/50 border border-glass-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-neon-cyan"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">File Name</label>
+                <input
+                  type="text"
+                  value={fileName}
+                  onChange={(e) => setFileName(e.target.value)}
+                  placeholder="Enter file name"
+                  className="w-full bg-glass-bg/50 border border-glass-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-neon-cyan"
+                />
+              </div>
+              
+              <button
+                onClick={generateAmountFile}
+                disabled={isGeneratingFile}
+                className="bg-gradient-primary text-primary-foreground px-6 py-3 rounded-xl font-medium hover:shadow-glow transition-all duration-300 disabled:opacity-50"
+              >
+                {isGeneratingFile ? 'Generating...' : 'Generate File'}
+              </button>
+              
+              {generatedFileUrl && (
+                <div className="mt-4 p-4 bg-muted/30 rounded-xl">
+                  <p className="text-sm text-muted-foreground mb-2">File generated successfully!</p>
+                  <a 
+                    href={generatedFileUrl} 
+                    download={`${fileName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_amount.txt`}
+                    className="text-neon-cyan hover:underline"
+                  >
+                    Download {fileName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_amount.txt
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -1,32 +1,32 @@
 import express from 'express';
 import {
-  processPayment,
-  getPaymentStatus,
-  getAllPayments,
+  processPaymentController,
+  getPaymentStatusController,
+  getAllPaymentsController,
   generateUpiQrCode,
-  updateUpiId,
-  getUpiId
+  updateUpiIdController,
+  getUpiIdController
 } from '../controllers/paymentController.js';
 import { verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // POST /api/payments/process
-router.post('/process', processPayment);
+router.post('/process', processPaymentController);
 
 // GET /api/payments/status/:paymentId
-router.get('/status/:paymentId', getPaymentStatus);
+router.get('/status/:paymentId', getPaymentStatusController);
 
 // GET /api/payments (admin only)
-router.get('/', verifyToken, getAllPayments);
+router.get('/', verifyToken, getAllPaymentsController);
 
 // POST /api/payments/generate-upi-qr
 router.post('/generate-upi-qr', generateUpiQrCode);
 
 // POST /api/payments/update-upi-id (admin only)
-router.post('/update-upi-id', verifyToken, updateUpiId);
+router.post('/update-upi-id', verifyToken, updateUpiIdController);
 
 // GET /api/payments/upi-id
-router.get('/upi-id', getUpiId);
+router.get('/upi-id', getUpiIdController);
 
 export default router;

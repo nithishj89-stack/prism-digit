@@ -1,8 +1,6 @@
 // Payment controller for handling payment-related operations
 import QRCode from 'qrcode';
-
-// Store payments in memory (in production, this would be in a database)
-let payments = [];
+import { getUpiId, updateUpiId, processPayment, getPaymentById, getAllPayments } from '../services/firebasePaymentService.js';
 
 // Store UPI ID in memory (in production, this would be in a database)
 let upiId = process.env.UPI_ID || 'canteen@upi';
@@ -22,7 +20,7 @@ const generatePaymentId = () => {
 };
 
 // Update UPI ID
-export const updateUpiId = async (req, res) => {
+export const updateUpiIdController = async (req, res) => {
   try {
     const { newUpiId } = req.body;
     
@@ -30,7 +28,7 @@ export const updateUpiId = async (req, res) => {
       return res.status(400).json({ message: 'UPI ID is required' });
     }
     
-    upiId = newUpiId;
+    upiId = await updateUpiId(newUpiId);
     
     res.json({ message: 'UPI ID updated successfully', upiId: upiId });
   } catch (error) {
@@ -39,16 +37,17 @@ export const updateUpiId = async (req, res) => {
 };
 
 // Get current UPI ID
-export const getUpiId = async (req, res) => {
+export const getUpiIdController = async (req, res) => {
   try {
-    res.json({ upiId: upiId });
+    const currentUpiId = await getUpiId();
+    res.json({ upiId: currentUpiId });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
 // Process a payment
-export const processPayment = async (req, res) => {
+export const processPaymentController = async (req, res) => {
   try {
     const { orderId, amount, paymentMethod, cartItems } = req.body;
     
@@ -63,18 +62,18 @@ export const processPayment = async (req, res) => {
     const finalOrderId = orderId || generateOrderId();
     
     // Create payment record
-    const payment = {
+    const paymentData = {
       id: generatePaymentId(),
-      orderId: finalOrderId,
+      order_id: finalOrderId,
       amount,
-      paymentMethod,
-      cartItems: cartItems || [],
+      payment_method: paymentMethod,
+      cart_items: cartItems || [],
       status: 'completed', // In a real system, this would be 'pending' initially
       timestamp: new Date().toISOString()
     };
     
-    // Store payment record
-    payments.push(payment);
+    // Store payment record in Supabase
+    const payment = await processPayment(paymentData);
     
     // In a real system, you would integrate with actual payment gateways here
     // For now, we'll simulate a successful payment
@@ -82,14 +81,14 @@ export const processPayment = async (req, res) => {
     res.status(200).json({
       message: 'Payment processed successfully',
       paymentId: payment.id,
-      orderId: payment.orderId,
+      orderId: payment.order_id,
       status: 'completed',
       receipt: {
-        orderId: payment.orderId,
+        orderId: payment.order_id,
         paymentId: payment.id,
         amount: payment.amount,
-        paymentMethod: payment.paymentMethod,
-        items: payment.cartItems,
+        paymentMethod: payment.payment_method,
+        items: payment.cart_items,
         timestamp: payment.timestamp,
         upiId: upiId
       }
@@ -100,11 +99,11 @@ export const processPayment = async (req, res) => {
 };
 
 // Get payment status
-export const getPaymentStatus = async (req, res) => {
+export const getPaymentStatusController = async (req, res) => {
   try {
     const { paymentId } = req.params;
     
-    const payment = payments.find(p => p.id === paymentId);
+    const payment = await getPaymentById(paymentId);
     
     if (!payment) {
       return res.status(404).json({ message: 'Payment not found' });
@@ -112,16 +111,16 @@ export const getPaymentStatus = async (req, res) => {
     
     res.json({
       paymentId: payment.id,
-      orderId: payment.orderId,
+      orderId: payment.order_id,
       status: payment.status,
       amount: payment.amount,
-      paymentMethod: payment.paymentMethod,
+      paymentMethod: payment.payment_method,
       receipt: {
-        orderId: payment.orderId,
+        orderId: payment.order_id,
         paymentId: payment.id,
         amount: payment.amount,
-        paymentMethod: payment.paymentMethod,
-        items: payment.cartItems,
+        paymentMethod: payment.payment_method,
+        items: payment.cart_items,
         timestamp: payment.timestamp,
         upiId: upiId
       }
@@ -132,8 +131,9 @@ export const getPaymentStatus = async (req, res) => {
 };
 
 // Get all payments (for admin)
-export const getAllPayments = async (req, res) => {
+export const getAllPaymentsController = async (req, res) => {
   try {
+    const payments = await getAllPayments();
     res.json(payments);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -148,6 +148,13 @@ export const generateUpiQrCode = async (req, res) => {
     if (!amount) {
       return res.status(400).json({ 
         message: 'Missing required fields: amount is required' 
+      });
+    }
+    
+    // Validate amount is a positive number
+    if (amount <= 0) {
+      return res.status(400).json({ 
+        message: 'Amount must be a positive number' 
       });
     }
     

@@ -40,6 +40,32 @@ const Home = () => {
               Get Started
               <ArrowRight className="w-5 h-5" />
             </Link>
+            
+            {/* Login Options */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+              <Link
+                to="/student-login"
+                className="inline-flex items-center justify-center gap-2 bg-glass-bg/80 backdrop-blur-xl border border-glass-border text-foreground px-6 py-3 rounded-full text-base font-medium hover:shadow-elevated transition-all duration-300 hover:scale-105"
+              >
+                Student Login
+              </Link>
+              <Link
+                to="/faculty-login"
+                className="inline-flex items-center justify-center gap-2 bg-glass-bg/80 backdrop-blur-xl border border-glass-border text-foreground px-6 py-3 rounded-full text-base font-medium hover:shadow-elevated transition-all duration-300 hover:scale-105"
+              >
+                Faculty Login
+              </Link>
+            </div>
+            
+            {/* Registration Link */}
+            <div className="mt-6 text-center">
+              <p className="text-muted-foreground">
+                Don't have an account?{' '}
+                <Link to="/register" className="text-neon-cyan hover:underline">
+                  Register now
+                </Link>
+              </p>
+            </div>
           </div>
 
           {/* Feature Cards */}

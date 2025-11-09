@@ -1,9 +1,9 @@
-import FoodService from '../services/foodService.js';
+import { getAllFoods, getFoodById, createFood, updateFood, deleteFood, toggleFoodAvailability } from '../services/firebaseFoodService.js';
 
 // Get all foods
-export const getAllFoods = async (req, res) => {
+export const getAllFoodsController = async (req, res) => {
   try {
-    const foods = await FoodService.getAllFoods();
+    const foods = await getAllFoods();
     res.json(foods);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -11,9 +11,9 @@ export const getAllFoods = async (req, res) => {
 };
 
 // Get food by ID
-export const getFoodById = async (req, res) => {
+export const getFoodByIdController = async (req, res) => {
   try {
-    const food = await FoodService.getFoodById(req.params.id);
+    const food = await getFoodById(req.params.id);
     if (!food) {
       return res.status(404).json({ message: 'Food not found' });
     }
@@ -23,10 +23,22 @@ export const getFoodById = async (req, res) => {
   }
 };
 
-// Create new food
-export const createFood = async (req, res) => {
+// Get foods by category
+export const getFoodsByCategoryController = async (req, res) => {
   try {
-    const food = await FoodService.createFood(req.body);
+    const { category } = req.params;
+    const foods = await getAllFoods();
+    const filteredFoods = foods.filter(food => food.category === category);
+    res.json(filteredFoods);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Create new food
+export const createFoodController = async (req, res) => {
+  try {
+    const food = await createFood(req.body);
     res.status(201).json(food);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -34,9 +46,9 @@ export const createFood = async (req, res) => {
 };
 
 // Update food
-export const updateFood = async (req, res) => {
+export const updateFoodController = async (req, res) => {
   try {
-    const food = await FoodService.updateFood(req.params.id, req.body);
+    const food = await updateFood(req.params.id, req.body);
     if (!food) {
       return res.status(404).json({ message: 'Food not found' });
     }
@@ -47,9 +59,9 @@ export const updateFood = async (req, res) => {
 };
 
 // Delete food
-export const deleteFood = async (req, res) => {
+export const deleteFoodController = async (req, res) => {
   try {
-    const result = await FoodService.deleteFood(req.params.id);
+    const result = await deleteFood(req.params.id);
     if (!result) {
       return res.status(404).json({ message: 'Food not found' });
     }
@@ -59,12 +71,14 @@ export const deleteFood = async (req, res) => {
   }
 };
 
-// Get foods by category
-export const getFoodsByCategory = async (req, res) => {
+// Toggle food availability
+export const toggleFoodAvailabilityController = async (req, res) => {
   try {
-    const { category } = req.params;
-    const foods = await FoodService.getFoodsByCategory(category);
-    res.json(foods);
+    const food = await toggleFoodAvailability(req.params.id);
+    if (!food) {
+      return res.status(404).json({ message: 'Food not found' });
+    }
+    res.json(food);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
